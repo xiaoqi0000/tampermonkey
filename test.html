@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件管理</title>
+</head>
+
+<body>
+    <div style="background: white;padding: 30px;border-radius: 10px;box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);max-width: 400px;width: 100%;"
+        class="login-container">
+        <form id="fileForm">
+            <div style="margin-bottom: 20px;display: none;">
+                <input type="text" id="fileUser" placeholder="User" value="sxq" required
+                    style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 20px;display: none;">
+                <label for="fileType"
+                    style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;">操作方式</label>
+                <select id="fileType" name="type"
+                    style="width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+                    <option value="add">添加数据</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="fileName" placeholder="输入文件名" disabled required
+                    style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="fileUrl" placeholder="输入URL"
+                    style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+            </div>
+            <button type="submit"
+                style="width: 100%;padding: 12px;background-color: #96dee0;color: white;border: none;border-radius: 5px;font-weight: bold;cursor: pointer;transition: background-color 0.3s;">提交</button>
+        </form>
+        <div id="message" style="text-align: center;margin-top: 15px;color: #0652dd;">请操作</div>
+    </div>
+    <script>
+        document.getElementById('fileForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var fileName = document.getElementById('fileName').value;
+            var fileUrl = document.getElementById('fileUrl').value;
+            var fileType = document.getElementById('fileType').value;
+            var fileUser = document.getElementById('fileUser').value;
+
+            console.log('文件名：' + fileName + ', 文件地址：' + fileUrl);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/pan', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    document.getElementById('message').innerText = xhr.responseText;
+                    setTimeout(() => {
+                        document.getElementById('message').innerText = '请操作';
+                    }, 400);
+                }
+            };
+            xhr.send(JSON.stringify({ fileUser: fileUser, fileType: fileType, fileName: fileName, fileUrl: fileUrl }));
+        });
+    </script>
+</body>
+
+</html>
