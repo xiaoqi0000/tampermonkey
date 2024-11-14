@@ -21,6 +21,7 @@
     const originalSend = XMLHttpRequest.prototype.send;
 
     XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
+        //添加功能
         if (url.startsWith('/b/api/share/create')) {
             const onLoadHandler = function () {
                 try {
@@ -28,7 +29,7 @@
                     // console.log('Response:', jsonResponse);
                     newestjsonResponse = jsonResponse;
                     setTimeout(() => {
-                        refreshForm();
+                        refreshForm('添加');
                     }, 100);
                 } catch (e) {
                     console.error('解析 JSON 失败：', e);
@@ -37,12 +38,36 @@
             this.addEventListener('load', onLoadHandler);
             isOpenCalled = true;
         }
+        //删除功能
+        if (url.startsWith('/b/api/file/trash')) {
+            const onLoadHandler = function () {
+                try {
+                    const jsonResponse = JSON.parse(this.responseText);
+                    newestjsonResponse = jsonResponse;
+                    setTimeout(() => {
+                        refreshForm('删除');
+                    }, 100);
+                } catch (e) {
+                    console.error('解析 JSON 失败：', e);
+                }
+            };
+            this.addEventListener('load', onLoadHandler);
+            isOpenCalled = true;
+
+        }
+
         originalOpen.call(this, method, url, async, user, password);
     };
 
     XMLHttpRequest.prototype.send = function (data) {
         if (isOpenCalled) {
-            requestBodyData = JSON.parse(data);
+
+            try {
+                requestBodyData = JSON.parse(data);
+                // console.log('Request Body:', JSON.parse(data));
+            } catch (e) {
+                console.error('解析 JSON 失败：', e);
+            }
             // console.log('Request Body:', JSON.parse(data));
             isOpenCalled = false;
         }
@@ -51,8 +76,16 @@
 
     // 刷新表单数据
     function refreshForm(params) {
-        document.getElementById('fileName').value = requestBodyData.shareName;
-        document.getElementById('fileUrl').value = newestjsonResponse.data.shareLinkList.list[0]
+
+        if (params === '添加') {
+            document.getElementById('fileName').value = requestBodyData.shareName;
+            document.getElementById('fileUrl').value = newestjsonResponse.data.shareLinkList.list[0]
+            document.getElementById('fileType').value = 'add';
+        } else if (params === '删除') {
+            document.getElementById('fileName').value = requestBodyData.fileTrashInfoList[0].FileName;
+            document.getElementById('fileUrl').value = ''
+            document.getElementById('fileType').value = 'sub';
+        }
 
         // console.log(requestBodyData);
         // console.log(newestjsonResponse);
@@ -129,10 +162,12 @@
 <div style="margin-bottom: 20px;display: none;">
     <input type="text" id="fileUser" placeholder="User" value="sxq" required style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
 </div>
-<div style="margin-bottom: 20px;display: none;">
+<div style="margin-bottom: 20px;">
     <label for="fileType" style="display: block;margin-bottom: 5px;font-weight: bold;color: #555;">操作方式</label>
-    <select id="fileType" name="type" style="width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+    <select id="fileType" disabled name="type" style="width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 5px;transition: border-color 0.3s;box-sizing: border-box;">
+        <option value="">选择操作类型</option>
         <option value="add">添加数据</option>
+        <option value="sub">删除数据</option>
     </select>
 </div>
 <div style="margin-bottom: 20px;">
@@ -186,6 +221,7 @@
                         setTimeout(() => {
                             document.getElementById('message').innerText = '请操作';
                         }, 400);
+                        // console.log({ fileUser: fileUser, fileType: fileType, fileName: fileName, fileUrl: fileUrl });
                     },
                     onerror: function (error) {
                         console.error("请求出错：", error);
@@ -195,6 +231,8 @@
                 // 清空表单输入相关数据
                 newestjsonResponse = '';
                 requestBodyData = '';
+                document.getElementById('fileType').value = '';
+
             });
 
 
